@@ -32,4 +32,20 @@ jobs:
         with:
           name: junit-report
           path: reports/junit.xml
+          
+      - name: Send results to Xray Cloud
+        env:
+          XRAY_CLIENT_ID: ${{ secrets.XRAY_CLIENT_ID }}
+          XRAY_CLIENT_SECRET: ${{ secrets.XRAY_CLIENT_SECRET }}
+        run: |
+          TOKEN=$(curl -s -H "Content-Type: application/json" \
+            -X POST \
+            -d "{\"client_id\":\"$XRAY_CLIENT_ID\",\"client_secret\":\"$XRAY_CLIENT_SECRET\"}" \
+            https://xray.cloud.getxray.app/api/v2/authenticate | tr -d '"')
+
+          curl -s -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: text/xml" \
+            --data @reports/junit.xml \
+            "https://xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=EP"
+
 
